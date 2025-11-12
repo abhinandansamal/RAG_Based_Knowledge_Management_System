@@ -1,6 +1,8 @@
 # RAG_Based_Knowledge_Management_System
 
-This application allows users to upload `.txt` and `.pdf` documents, store their content in a vector database, and then ask questions against that content using a Large Language Model (LLM).
+This project is a full-stack Python application that builds an interactive knowledge base from your documents. Users can upload `.txt` and `.pdf` files, which are then processed, vectorized, and stored. A conversational AI, powered by a Large Language Model (LLM) and Retrieval-Augmented Generation (RAG), can then answer questions based on the content of those documents, as shown below:
+
+<img width="1260" height="861" alt="image" src="https://github.com/user-attachments/assets/ce138751-8f87-4c89-add8-7386e8788337" />
 
 ## Overview
 
@@ -12,55 +14,120 @@ The application leverages the following key components:
 * **LLM Service:** A service that interacts with a Large Language Model to generate answers based on the user's query and the retrieved relevant document chunks from the vector store.
 * **LangChain:** Used for document loading (`TextLoader`, `PyPDFLoader`) and text splitting (`RecursiveCharacterTextSplitter`).
 
-## Features
+## ⚙️ Application Architecture
+The application follows a clear, modular workflow:
 
-* **Document Upload:** Users can upload `.txt` and `.pdf` files through a web interface.
-* **Document Processing:** Uploaded documents are processed by:
-    * Loading the content.
-    * Splitting the text into manageable chunks.
-    * Generating embeddings for these chunks (implicitly done by the `VectorStore` and `LLMService`).
-* **Storage:** Uploaded files are stored (currently likely simulated) using an S3-like storage service.
-* **Vector Database:** The embeddings of the document chunks are stored in a local Chroma vector database for semantic search.
-* **Question Answering:** Users can ask questions through an API endpoint. The application retrieves relevant document chunks based on the question's embedding and uses an LLM to generate an answer.
-* **Logging:** The application includes basic logging for debugging and monitoring.
+**1. File Upload** (`/upload`):
 
+* A user uploads a `.pdf` or `.txt` file via the **Flask** web interface.
 
-## How to run?
+* The file is saved to a cloud bucket using the **AWS S3** Storage Service.
 
-### STEPS:
+* The document is loaded and split into text chunks using **LangChain**.
 
-### STEP 01 - Create a conda environment after opening the repository
+* The **Vector Store Service** generates embeddings (using OpenAI) for each chunk and stores them in the **Chroma** vector database.
+
+**2. Question Answering** (`/query`):
+
+* A user submits a question via the Flask API.
+
+* The **LLM Service** takes the question.
+
+* It queries the **Vector Store** to retrieve the most relevant document chunks (the "context").
+
+* The service uses LangChain's `ConversationalRetrievalChain` to send the question and the context to the **OpenAI LLM** (gpt-3.5-turbo).
+
+* The LLM generates an answer, which is returned to the user as a JSON response.
+
+## 🔧 Technology Stack
+* **Backend:** Flask
+* **AI & RAG:** LangChain, OpenAI (gpt-3.5-turbo)
+* **Vector Database:** ChromaDB (for semantic search and storage)
+* **File Storage:** AWS S3 (via `boto3`)
+* **Core:** Python 3.11
+
+## ✨ Features
+* **Document Upload:** Web interface to upload `.txt` and `.pdf` files.
+* **Cloud Storage:** Integrates with AWS S3 for scalable file storage.
+* **Document Processing:** Automatically loads, splits, and creates embeddings for document content.
+* **Persistent Vector Store:** Uses ChromaDB to save and load the vector database from disk.
+* **Conversational Q&A:** Leverages LangChain's `ConversationalRetrievalChain` and `ConversationBufferMemory` to answer questions with context and remember chat history.
+* **API-Driven:** Clean RESTful endpoints for uploading documents and posting queries.
+* **Modular Code:** Services are separated by concern (LLM, Storage, Vector Store).
+
+## 🚀 Getting Started
+Follow these steps to set up and run the project locally.
+
+### 1. Prerequisites
+* Python 3.11
+* Conda (or another virtual environment manager)
+* Git
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/abhinandansamal/RAG_Based_Knowledge_Management_System.git
+cd RAG_Based_Knowledge_Management_System
+```
+
+### 3. Create & Activate Conda Environment
 
 ```bash
 conda create -n llmapp python=3.11 -y
-```
-
-```bash
 conda activate llmapp
 ```
 
-### STEP 02 - Install the requirements
+### 4. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
+### 5. Configure Environment Variables
+This application requires API keys and configuration to connect to OpenAI and AWS S3. You will need to set these in your environment.
+
+The application reads from `config.py`.
+
+**Required Variables:**
+
+* `OPENAI_API_KEY`: Your API key from OpenAI.
+* `AWS_ACCESS_KEY`: Your AWS IAM user access key.
+* `AWS_SECRET_KEY`: Your AWS IAM user secret key.
+* `AWS_BUCKET_NAME`: The name of the S3 bucket where files will be stored.
+* `VECTOR_DB_PATH`
+
+### 6. Run the Application
 
 ```bash
-# Finally run the following command
 python app/main.py
 ```
 
-Now,
-```bash
-open up your local host and port
-```
+The application will now be running on http://0.0.0.0:8080 (or http://localhost:8080).
 
-## Endpoints
+<img width="1043" height="212" alt="image" src="https://github.com/user-attachments/assets/b17571c4-eddb-44e4-8066-a7570e77a508" />
 
-* **`/` (GET):** Renders the main web interface (`index.html`) for uploading files and asking questions.
-* **`/upload` (POST):** Accepts file uploads (only `.txt` and `.pdf` are currently supported). Processes the document, stores it (simulated S3), and adds its content to the vector database. Returns a JSON response indicating success or failure.
-* **`/query` (POST):** Accepts a JSON payload with a `question` key. Queries the vector database for relevant document chunks and uses the LLM service to generate a response. Returns a JSON response containing the `response`.
+## 🌐 API Endpoints
+* `GET /`
 
-## Project Structure
+   * Description: Renders the main web interface (`index.html`) for uploading files and asking questions.
+
+* `POST /upload`
+
+   * Description: Accepts file uploads. Processes the document, stores it in S3, and adds its content to the vector database.
+
+   * Body: `multipart/form-data` with a `file` key.
+
+   * Returns: JSON response indicating success or failure.
+
+* `POST /query`
+
+   * Description: Accepts a user's question, retrieves context, and returns an LLM-generated answer.
+
+   * Body: JSON payload: `{ "question": "Your question here" }`
+
+   * Returns: JSON response: `{ "response": "The AI's answer here" }`
+
+
+## 📂 Project Structure
 
 The code demonstrates a modular structure:
 
