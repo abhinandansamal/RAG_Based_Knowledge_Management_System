@@ -1,4 +1,4 @@
-# RAG_Based_Knowledge_Management_System
+# Enterprise RAG Knowledge System (GenAI Knowledge Management)
 
 This project is a full-stack Python application that builds an interactive knowledge base from your documents. Users can upload `.txt` and `.pdf` files, which are then processed, vectorized, and stored. A conversational AI, powered by a Large Language Model (LLM) and Retrieval-Augmented Generation (RAG), can then answer questions based on the content of those documents, as shown below:
 
